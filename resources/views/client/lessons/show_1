@@ -1,0 +1,117 @@
+@extends('layout.client')
+
+@section('content')
+
+<div class="container-fluid">
+    <div class="row">
+
+        {{-- ==================== MENU BÊN TRÁI ==================== --}}
+        <div class="col-md-3 border-end" style="height: 100vh; overflow-y: auto;">
+            <h5 class="mt-3">{{ $course->title }}</h5>
+
+            @foreach($course->modules as $module)
+                <div class="mt-3">
+                    <strong>{{ $module->title }}</strong>
+
+                    <ul class="list-group mt-2">
+                        @foreach($module->lessons as $l)
+                            <a href="{{ route('lessons.show', [$course->id, $l->id]) }}"
+                               class="list-group-item list-group-item-action 
+                               {{ $lesson->id == $l->id ? 'active' : '' }}">
+                                {{ $l->order }}. {{ $l->title }}
+                            </a>
+                        @endforeach
+                    </ul>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- ==================== NỘI DUNG BÀI HỌC ==================== --}}
+        <div class="col-md-9 p-4">
+
+            {{-- Video --}}
+            <div class="card mb-4">
+                <div class="card-body p-0">
+
+                    @if($videoUrl)
+                        <video width="100%" controls>
+                            <source src="{{ asset($videoUrl) }}" type="video/mp4">
+                        </video>
+                    @else
+                        <div class="p-5 text-center bg-dark text-white">
+                            <h4>Chưa có video cho bài học này</h4>
+                        </div>
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- Mô tả bài học --}}
+            <div class="card mb-4">
+                <div class="card-header"><h4>{{ $lesson->title }}</h4></div>
+                <div class="card-body">
+                    {!! nl2br(e($lesson->description)) !!}
+                </div>
+            </div>
+
+            {{-- ==================== BÀI TẬP ==================== --}}
+            <div class="card mb-4">
+                <div class="card-header"><h5>Bài tập</h5></div>
+                <div class="card-body">
+
+                    @if($lesson->assignments->count())
+                        @foreach($lesson->assignments as $a)
+                            <div class="border p-3 mb-2 rounded">
+                                <strong>{{ $a->title }}</strong>
+                                <p class="mb-1">{{ $a->description }}</p>
+                                <a href="{{ asset($a->file_path) }}" class="btn btn-sm btn-primary" download>
+                                    Tải file bài tập
+                                </a>
+                            </div>
+                        @endforeach
+                    @else
+                        <p class="text-muted">Không có bài tập</p>
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- ==================== BÌNH LUẬN ==================== --}}
+            <div class="card mb-4">
+                <div class="card-header"><h5>Bình luận</h5></div>
+                <div class="card-body">
+
+                    {{-- Form bình luận --}}
+                    <form action="{{ route('comments.store') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="lesson_id" value="{{ $lesson->id }}">
+
+                        <textarea name="content" rows="3" class="form-control" placeholder="Viết bình luận..."></textarea>
+                        <button class="btn btn-primary mt-2">Gửi</button>
+                    </form>
+
+                    <hr>
+
+                    {{-- Hiển thị bình luận --}}
+                    @foreach($lesson->comments as $c)
+                        <div class="d-flex mb-3">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($c->user->name) }}"
+                                 class="rounded-circle me-2" width="45">
+
+                            <div>
+                                <strong>{{ $c->user->name }}</strong>
+                                <p class="mb-1">{{ $c->content }}</p>
+                                <small class="text-muted">{{ $c->created_at->diffForHumans() }}</small>
+                            </div>
+                        </div>
+                    @endforeach
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@endsection
